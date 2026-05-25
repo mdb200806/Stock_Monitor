@@ -16,19 +16,25 @@ def translate_text(text):
 def get_latest_news(ticker):
     try:
         stock = yf.Ticker(ticker)
+        # ニュースデータをもっと詳細に取得
         news = stock.news
         print(f"\n--- {ticker} の最新ニュース ---")
-        if news:
-            for item in news[:3]:
-                title = item.get('title', 'タイトルなし')
-                publisher = item.get('provider', {}).get('displayName', '発行元不明')
-                # ここで翻訳を呼び出し
-                print(f"- {translate_text(title)} ({publisher})")
-        else:
-            print("- ニュースなし")
+        
+        if not news:
+            print("- ニュースは見つかりませんでした。")
+            return
+
+        for item in news[:3]:
+            # タイトル取得の探索範囲を広げる
+            title = item.get('title') or item.get('content', {}).get('title', 'タイトル取得不可')
+            publisher = item.get('publisher', '発行元不明')
+            
+            # 翻訳を試みる（エラーなら英語タイトルをそのまま出す）
+            print(f"- {translate_text(title)} ({publisher})")
+            
         print("--------------------------\n")
     except Exception as e:
-        print(f"ニュース取得エラー: {e}")
+        print(f"ニュース取得中にエラー発生: {e}")
 
 def show_chart(ticker, name):
     stock = yf.Ticker(ticker)
