@@ -53,7 +53,21 @@ def show_chart(ticker, name):
     thread.start()
 
 # --- 監視開始 ---
-portfolio = {"8593.T": "三菱HCキャピタル", "8058.T": "三菱商事", "NVDA": "NVIDIA"}
+portfolio = {
+    # 長期・買い増し枠
+    "8593.T": "三菱HCキャピタル",
+    "8058.T": "三菱商事",
+    "4502.T": "武田薬品工業",
+    "4503.T": "アステラス製薬",
+    "8306.T": "三菱UFJ",
+    "2914.T": "JT",
+    
+    # 短期トレード用（半導体・AIインフラ）
+    "SOXX": "半導体ETF",
+    "FANG": "FANG+ ETF",
+    "NVDA": "NVIDIA",
+    "2244.T": "米国半導体ETF"
+}
 
 print("--- 自動監視・解析を開始 ---")
 
