@@ -1,6 +1,7 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 from googletrans import Translator
+import threading
 
 # 日本語表示の設定
 plt.rcParams['font.family'] = 'MS Gothic'
@@ -21,37 +22,35 @@ def get_latest_news(ticker):
         print(f"\n--- {ticker} の最新ニュース ---")
         if news:
             for item in news[:3]:
-                # ニュースのタイトルは構造によって場所が変わるため、いくつか試す
+                # 取得経路を複数試してタイトルを確実に拾う
                 title = item.get('title') or item.get('content', {}).get('title') or "タイトル取得不可"
-                # 発行元も探す
                 provider = item.get('provider', {})
                 publisher = provider.get('displayName') or item.get('publisher') or "発行元不明"
-                
                 print(f"- {translate_text(title)} ({publisher})")
         else:
             print("- ニュースなし")
         print("--------------------------\n")
-    except Exception as e:
-        print(f"ニュース取得エラー: {e}")
+    except Exception:
+        print("ニュース取得エラー")
 
 def show_chart(ticker, name):
-    """グラフを描画してプログラムが終了しても残す関数"""
-    stock = yf.Ticker(ticker)
-    data = stock.history(period="60d")
-    
-    if not data.empty:
-        data['MA25'] = data['Close'].rolling(window=25, min_periods=1).mean()
-        plt.figure(figsize=(10, 5))
-        plt.plot(data['Close'], label='株価')
-        plt.plot(data['MA25'], label='25日移動平均', linestyle='--')
-        plt.title(f"{name} のチャート")
-        plt.legend()
-        plt.grid(True)
-        
-        # グラフを立ち上げる（block=Falseで進む）
-        plt.show(block=False)
-        # ここで「画面描画」を確実にするため少し待機
-        plt.pause(2.0)
+    """グラフを別スレッドで起動してメインプログラムを止めない関数"""
+    def _plot():
+        stock = yf.Ticker(ticker)
+        data = stock.history(period="60d")
+        if not data.empty:
+            data['MA25'] = data['Close'].rolling(window=25, min_periods=1).mean()
+            plt.figure(figsize=(10, 5))
+            plt.plot(data['Close'], label='株価')
+            plt.plot(data['MA25'], label='25日移動平均', linestyle='--')
+            plt.title(f"{name} のチャート")
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+
+    # 別スレッドで実行開始
+    thread = threading.Thread(target=_plot)
+    thread.start()
 
 # --- 監視開始 ---
 portfolio = {"8593.T": "三菱HCキャピタル", "8058.T": "三菱商事", "NVDA": "NVIDIA"}
@@ -72,12 +71,13 @@ for ticker, name in portfolio.items():
         
         print(f"{name}: 現在 {current:.1f}円 / 乖離 {deviation:+.1f}%")
         
+        # 乖離が-5%以下ならチャンスと判断
         if deviation <= -5:
             print("【チャンス！】")
             get_latest_news(ticker)
             show_chart(ticker, name)
             
-    except Exception as e:
+    except Exception:
         print(f"{name}: データ取得でエラー発生")
 
 print("--- チェック完了 ---")
