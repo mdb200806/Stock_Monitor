@@ -35,9 +35,10 @@ def get_latest_news(ticker):
         print(f"ニュース取得エラー: {e}")
 
 def show_chart(ticker, name):
-    """グラフを非ブロッキング（止まらない）形式で表示する関数"""
+    """グラフを描画してプログラムが終了しても残す関数"""
     stock = yf.Ticker(ticker)
     data = stock.history(period="60d")
+    
     if not data.empty:
         data['MA25'] = data['Close'].rolling(window=25, min_periods=1).mean()
         plt.figure(figsize=(10, 5))
@@ -46,9 +47,11 @@ def show_chart(ticker, name):
         plt.title(f"{name} のチャート")
         plt.legend()
         plt.grid(True)
-        # block=False にすることで、プログラムが止まらずに次に進む
+        
+        # グラフを立ち上げる（block=Falseで進む）
         plt.show(block=False)
-        plt.pause(0.1)
+        # ここで「画面描画」を確実にするため少し待機
+        plt.pause(2.0)
 
 # --- 監視開始 ---
 portfolio = {"8593.T": "三菱HCキャピタル", "8058.T": "三菱商事", "NVDA": "NVIDIA"}
