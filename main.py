@@ -21,14 +21,18 @@ def get_latest_news(ticker):
         print(f"\n--- {ticker} の最新ニュース ---")
         if news:
             for item in news[:3]:
-                title = item.get('title', 'タイトル取得不可')
-                publisher = item.get('publisher', '発行元不明')
+                # ニュースのタイトルは構造によって場所が変わるため、いくつか試す
+                title = item.get('title') or item.get('content', {}).get('title') or "タイトル取得不可"
+                # 発行元も探す
+                provider = item.get('provider', {})
+                publisher = provider.get('displayName') or item.get('publisher') or "発行元不明"
+                
                 print(f"- {translate_text(title)} ({publisher})")
         else:
             print("- ニュースなし")
         print("--------------------------\n")
-    except Exception:
-        print("ニュース取得エラー")
+    except Exception as e:
+        print(f"ニュース取得エラー: {e}")
 
 def show_chart(ticker, name):
     """グラフを非ブロッキング（止まらない）形式で表示する関数"""
