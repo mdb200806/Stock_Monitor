@@ -11,3 +11,6 @@ stock = yf.Ticker(ticker)
 price = stock.history(period="1d")['Close'].iloc[-1]
 
 print(f"{ticker} の現在価格: {price:.1f}円")
+
+#test
+print
