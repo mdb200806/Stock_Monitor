@@ -1,21 +1,27 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 
-# --- ここを追加：日本語フォントの設定 ---
-plt.rcParams['font.family'] = 'MS Gothic' 
-# ------------------------------------
+# 日本語フォント設定
+plt.rcParams['font.family'] = 'MS Gothic'
+
+def get_latest_news(ticker):
+    """ニュースを取得する関数"""
+    stock = yf.Ticker(ticker)
+    news = stock.news
+    print(f"\n--- {ticker} の最新ニュース ---")
+    for item in news[:3]:
+        print(f"- {item['title']} ({item['publisher']})")
+    print("--------------------------\n")
 
 def show_chart(ticker, name):
-    """銘柄を受け取ってグラフを表示する関数"""
+    """グラフを表示する関数"""
     stock = yf.Ticker(ticker)
-    data = stock.history(period="90d") # 少し長めの90日分
+    data = stock.history(period="90d")
     data['MA25'] = data['Close'].rolling(window=25).mean()
     
     plt.figure(figsize=(10, 5))
-    plt.plot(data['Close'], label='株価', color='blue') # ラベルも日本語に
+    plt.plot(data['Close'], label='株価', color='blue')
     plt.plot(data['MA25'], label='25日移動平均', color='red', linestyle='--')
-    
-    # 日本語タイトル
     plt.title(f"{name} ({ticker}) - チャートを確認してください！")
     plt.legend()
     plt.grid(True)
@@ -34,13 +40,9 @@ for ticker, name in portfolio.items():
         ma25 = data['Close'].rolling(window=25).mean().iloc[-1]
         deviation = ((current - ma25) / ma25) * 100
         
-        # 判定：もし乖離率が-5%以下ならグラフを表示！
         if deviation <= -5:
-            print(f"【チャンス！】{name}が割安です！({deviation:.1f}%) -> グラフを表示します")
-            show_chart(ticker, name)
+            print(f"【チャンス！】{name}が割安です！({deviation:.1f}%)")
+            get_latest_news(ticker) # ニュース追加
+            show_chart(ticker, name) # グラフ表示
         else:
             print(f"{name}: 乖離率 {deviation:+.1f}% (監視中)")
-    else:
-        print(f"{name}: データ不足のため判定スキップ")
-
-print("--- チェック完了 ---")
